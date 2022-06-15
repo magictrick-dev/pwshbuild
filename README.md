@@ -1,4 +1,6 @@
-<img src="md/logo.svg" width="300px">
+<img src="md/logo.svg" width="400px">
+
+For the lazy programmer, by the lazy programmer.
 
 ## Quickstart Guide
 
@@ -7,25 +9,21 @@ and then run CMake to create the build files. Compile the project and move the e
 such that you can map it to your environment variables to invoke the program from your terminal of choice.
 This project doesn't require any dependencies and can be compiled using any compiler of your choice.
 
-You can run pwshbuild with `pwshbuild` and it will automatically generate the scripts and the config file
-in the directory you are currently in.
-
-Supply `pwshbuild.conf` with the build directory and executable path. 
-
-## Quickstart Guide
-
-Compile the project using CMake or preferred compiler of choice and place the output executable
-somewhere quiet. There are zero dependencies--only one file. Once you have the executable, map it to
-your environment variables for ease-of-access so you can execute it from the command line wherever you are.
+Supply `pwshbuild.conf` with the build directory and executable path and the scripts will take care of the
+rest. Once done, the scripts are ready to go!
 
 ## What is pwshbuild?
 
-I found that typing the same commands into the command line often becomes tedious,
-so I wrote a series of powershell scripts to do the work for me. When typing those scripts into
-the command line became equally as tedious, I created keymaps in VSCode to type them in for me.
-Whenever I needed to make a new project, copying these powershell scripts over
-between each project also became tedious. So I wrote a program that generates these files for me each
-time I spin up a new C++ project.
+I find myself typing the same commands over and over again to be quite tedious, so I wrote a series of
+PowerShell scripts to take care of the work for me. When typing those scripts into the command line over
+and over again, it too became a tedious chore. So I created keymaps in Visual Studio Code to push these
+commands off to the terminal for me. However, whenever I started a new project, I ended needing to copy
+over these scripts from one project to another. That too became tedious.
+
+Pwshbuild is my attempt at solving a series of trivial problems: creating scripts, running scripts, and
+copying scripts. This project is very simplistic and it is reflected within the source code. It's not
+meant to do anything fancy, only enough to make my life simpler. If this is something that resonates with
+you, please feel free to use, fork, or contribute to the project. 
 
 ## What are the requirements to use pwshbuild?
 
@@ -35,19 +33,14 @@ Currently, pwshbuild is designed to interact with CMake and Visual Studio (deven
 
 ## How does it work?
 
-Pwshbuild, generates the powershell scripts and necessary configuration file.
-
-You will notice that these scripts are CMake focused--and that's because they are. Pwshbuild makes zero
-assumptions about your CMake configuration, therefore it is your responsibility to ensure the `pwshbuild.conf`
-file contains all the necessary locations to find what it needs. Don't worry, it's relatively simple to modify.
-**You can also check this git repository to see the files it generates!**
+Pwshbuild generates the powershell scripts and the necessary configuration file in the directory it is
+called in. You can run these scripts manually by invoking them or by making some changes to
+Visual Studio Code's keybinds to run them for you.
 
 ## What are your VSCode keybindings?
 
-To make full use of this utility, you will need to set these in your `keybindings.json` configuration
-file in order to make full use of these scripts. It's not required that you do this, but I find that it
-makes my life a little easier because I can hit a hotkey and run the scripts without switching over to a
-terminal to type them out.
+Below are the keybindings I use to execute the scripts while using Visual Studio Code. You can change the
+keys and behaviors as you see fit to best match what you're comfortable with.
 
 ```JSON
 {
