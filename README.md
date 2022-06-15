@@ -1,6 +1,16 @@
-# pwshbuild | C/C++ | For Visual Studio Code
+<img src="md/logo.svg" width="300px">
 
-For the lazy programmer, by the lazy programmer.
+## Quickstart Guide
+
+Clone the repository `git clone https://github.com/0xDATAWOLF/pwshbuild.git` to your location of choice
+and then run CMake to create the build files. Compile the project and move the executable somewhere quiet
+such that you can map it to your environment variables to invoke the program from your terminal of choice.
+This project doesn't require any dependencies and can be compiled using any compiler of your choice.
+
+You can run pwshbuild with `pwshbuild` and it will automatically generate the scripts and the config file
+in the directory you are currently in.
+
+Supply `pwshbuild.conf` with the build directory and executable path. 
 
 ## Quickstart Guide
 
