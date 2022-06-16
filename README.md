@@ -39,7 +39,7 @@ between projects. So I wrote **pwshbuild** to do all this work for me.
 	`pwshbuild.conf`. Depending on how the CMakeLists is set up, the executable path may be different. For
 	example, my typical path looks something like this: `exepathDebug=./build/bin/Debug/pwshbuild.exe`. In
 	order for `devenv` to be invoked by the command line, you will need to execute `vsvars64.bat` on terminal
-	startup. This is a bit of the scope of the project, but you can find more [more information here](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles?view=powershell-7.2).
+	startup. You can find [more information here](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles?view=powershell-7.2) if this something you're interested in.
 	You can create a profile script that is ran when PowerShell starts so that you have access to `devenv`.
 	The other script, `run.ps1`, runs the program using the `exepathDebug` entry in `pwshbuild.conf` as
 	described earlier.
