@@ -1,4 +1,4 @@
-<img src="md/logo.svg" width="400px">
+<img src="md/pwshbuild.svg" width="400px">
 
 For the lazy programmer, by the lazy programmer.
 
