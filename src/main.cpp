@@ -14,15 +14,17 @@
 #include <unordered_map>
 
 #include <assert.h>
-#include <stdint.h>
 
-typedef int b32; // I don't like the bool type.
+#include <stdint.h>
+typedef int32_t b32;
+typedef int64_t b64;
 
 // ---------------------------------------------------------------------------------------------------
 // Platform Abstractions
 // ---------------------------------------------------------------------------------------------------
 
-static inline std::string getApplicationPath();
+static inline std::string platformGetApplicationPath();
+static inline b32 platformFileExists(std::string);
 
 /**
  * Windows specific definitions.
@@ -30,9 +32,11 @@ static inline std::string getApplicationPath();
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 #include <windows.h>
 
-/** Returns the executable path of the application. */
+/**
+ * Returns the executable path of the application.
+ */
 static inline std::string
-getApplicationPath()
+platformGetApplicationPath()
 {
 
 	// Fetch the application path using Windows.
@@ -43,6 +47,19 @@ getApplicationPath()
 	// Return it as a string.
 	std::string applicationPath = stringBuffer;
 	return applicationPath;
+}
+
+/**
+ * Determines if a file exists.
+ */
+static inline b32
+platformFileExists(std::string fpath)
+{
+
+	// Get the file attributes and use that to determine if the file exists.
+	DWORD dwAttrib = GetFileAttributes(fpath.c_str());
+	return (dwAttrib != INVALID_FILE_ATTRIBUTES && !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+
 }
 
 #else
@@ -70,7 +87,7 @@ getApplicationPath()
  * to touch every script.
  */
 const char* loadconfig =
-	"Get-Content \"./pshbuild.conf\" | foreach-object -begin {$h=@{}} -process { $k = [regex]::split($_,'=');\n"
+	"Get-Content \"./pwshbuild.conf\" | foreach-object -begin {$h=@{}} -process { $k = [regex]::split($_,'=');\n"
 	"\tif(($k[0].CompareTo(\"\") -ne 0) -and ($k[0].StartsWith(\"[\") -ne $True)) { $h.Add($k[0], $k[1])}}";
 
 /**
@@ -158,6 +175,12 @@ class DOutput
 		DOutput(std::string message) { std::cout << message << "..."; };
 		~DOutput() { std::cout << " done!" << std::endl; }
 };
+
+static inline void
+printHelpEntry(std::string command, std::string desc)
+{
+	std::cout << std::setw(32) << std::left << command << std::setw(128) << std::left << desc << std::endl;
+}
 
 // ---------------------------------------------------------------------------------------------------
 // Argument Parsing Framework
@@ -311,7 +334,31 @@ static void
 initializeApplicationState(std::vector<argument> arguments, astate& applicationState)
 {
 
+	// Process the arguments.
+	for (argument& carg : arguments)
+	{
 
+		if (carg.head == "--help") 
+		{
+			applicationState.help_dialogue = true;
+		}
+
+		else if (carg.head == "--set-buildpath") 
+		{
+			applicationState.buildpath = carg.tail;
+		}
+
+		else if (carg.head == "--set-debugpath")
+		{
+			applicationState.debugpath = carg.tail;
+		}
+
+		else if (carg.head == "--overwrite-config")
+		{
+			applicationState.overwrite_config = true;
+		}
+
+	}
 
 }
 
@@ -329,33 +376,69 @@ main(int argc, char** argv)
 
 	// Application runtime variables & structures.
 	astate _app_state = {};
-	std::vector<argument> _app_args;
+	_app_state.buildpath = "";
+	_app_state.debugpath = "";
 
 	// Parse out the arguments from the command line.
+	std::vector<argument> _app_args;
 	parseArguments(_app_args, argc, argv);
-	if (!checkArguments(_app_args, argc, argv)) return 1; // If there are errors in the arguments, fast exit.
+	if (checkArguments(_app_args, argc, argv)) return 1; // If there are errors in the arguments, fast exit.
 
 	// Initialize the application state.
 	initializeApplicationState(_app_args, _app_state);
-	if (!checkArguments(_app_args, argc, argv)) return 1; // Initialization may invalidate the arguments.
-	
+	if (checkArguments(_app_args, argc, argv)) return 1; // Initialization may invalidate the arguments.
 
-/** For now, we don't really want to overwrite the project's own scripts.
+	// Finally, if the help dialogue was issued in the command arguments, override standard behavior and
+	// print everything out.
+	if (_app_state.help_dialogue)
+	{
+		std::cout << "You can use pwshbuild without any arguments. It will generate all the scripts with a\n"
+					 "default configuration that you can edit with the desired values as needed. Otherwise,\n"
+					 "the list of commands below will allow you to quickly pass in the known configuration\n"
+					 "entries using the various parameters below. Certain parameters, when passed, require\n"
+					 "that the proceeding argument must be present otherwise it is considered invalid.\n\n";
+
+		printHelpEntry("--help", "You are here! Prints the help dialogue.");
+		std::cout << std::endl;
+
+		printHelpEntry("--overwrite-config", "Allows pwshbuild to overwrite pwshbuild.conf if one is present.");
+		std::cout << std::endl;
+
+		printHelpEntry("--set-buildpath", "Sets the buildpath entry in pwshbuild.conf for you using the following argument.");
+		printHelpEntry("", "Please note that this will not mean the path is valid, only that the path supplied is set in the config.");
+		printHelpEntry("", "Example: pwshbuild --set-buildpath ./build");
+		std::cout << std::endl;
+
+		printHelpEntry("--set-debugpath", "Sets the debugpath entry in pwshbuild.conf for you using the following argument.");
+		printHelpEntry("", "Please note that this will not mean the path is valid, only that the path supplied is set in the config.");
+		printHelpEntry("", "Example: pwhsbuild --set-debugpath ./build/bin/Debug/pwshbuild.exe");
+		std::cout << std::endl;
+
+		return 0; // Exit application.
+	}
 
 	// Create a string stream to store the contents of a file.
 	std::stringstream fstring;
 
 	{
-		// Generate the configuration file.
-		DOutput dout("Generating configuration file");
-		fstring << "[General]" << std::endl;
-		fstring << "projectname=" << std::endl;
-		fstring << std::endl;
-		fstring << "[Build]" << std::endl;
-		fstring << "builddir=" << std::endl;
-		fstring << "exepathDebug=" << std::endl;
-		genf("./pshbuild.conf", fstring.str());
-		clearss(fstring);
+
+		if (!platformFileExists("./pwshbuild.conf") || _app_state.overwrite_config)
+		{
+			// Generate the configuration file.
+			DOutput dout("Generating configuration file");
+			fstring << "[General]" << std::endl;
+			fstring << "projectname=" << std::endl;
+			fstring << std::endl;
+			fstring << "[Build]" << std::endl;
+			fstring << "builddir=" << _app_state.buildpath << std::endl;
+			fstring << "exepathDebug=" << _app_state.debugpath << std::endl;
+			genf("./pwshbuild.conf", fstring.str());
+			clearss(fstring);
+		}
+		else
+		{
+			DOutput dout("Skipping configuration file (use --overwrite-config to override this behavior)");
+		}
 	}
 
 	{
@@ -397,8 +480,6 @@ main(int argc, char** argv)
 		genf("./debug.ps1", fstring.str());
 		clearss(fstring);
 	}
-
-*/
 
 	return 0;
 }
