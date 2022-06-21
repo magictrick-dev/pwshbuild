@@ -1,69 +1,102 @@
 <img src="md/pwshbuild.svg" width="400px">
 
-For the lazy programmer, by the lazy programmer.
+Tired of typing CMake commands to configure and build your projects? Don't feel like typing out lengthy paths
+just to execute your debug build located three folders deep? Need to clean out your build directory files because
+CMake isn't happy with some minor change in configuration? Me too. I wrote a series of PowerShell scripts
+to solve these minor inconveniences using clever key remaps in Visual Studio Code. Now you can too! With
+pwshbuild, you can generate these scripts on the fly and configure them for your particular environment
+using a handy config file in a single command. The scripts are designed to be extensible after generation,
+meaning that you can tailor them to do anything you want (after all, that's the point of a script).
+
+**Pwshbuild is designed for C/C++ CMake projects developed in VS Code which use Visual Studio for debugging.**
 
 # Quickstart Guide
 
-Clone the repository `git clone https://github.com/0xDATAWOLF/pwshbuild.git` and run CMake to configure
-the build files. Alternatively, you can also compile `main.cpp` directly using your compiler of choice.
-Once you have the executable, move it off to a good location such that you can map that to your environment
-variables. After all that is completed, you are free to execute `pwshbuild` at the root of your project
-directory to generate the PowerShell scripts.
+There are currently no available binaries for pwshbuild, so you will need to compile pwshbuild from source:
 
-A configuration file will also be generated. Supply `pwshbuild.conf` with the build directory and the
-executable path. The scripts will use this configuration file to execute their respective routines.
+1. Clone the repository to any directory of your choice.
 
-# What is pwshbuild?
+	``` git clone https://github.com/0xDATAWOLF/pwshbuild.git ```
 
-I wrote pwshbuild to solve a series of very trivial problems that don't normally need solving. Rather
-than typing out a series of commands in the terminal, I wrote a series of scripts to do the work for me.
-Once I got tired of typing the scripts in the terminal, I created keybinding shortcuts in Visual Studio
-Code to run them for me. The final tedium of this whole process involved copying these scripts over
-between projects. So I wrote **pwshbuild** to do all this work for me.
+2. Configure the project using CMake.
 
-* <h3> What <strong>pwshbuild</strong> does by default: </h3>
+	``` cmake . -B ./build ```
 
-	**pwhsbuild** generates a series of scripts to interact with CMake. The first script, `config_cmake.ps1`
-	configures CMake and uses `pwshbuild.conf` to determine what path it should use for the build directory.
-	For most purposes, setting `builddir=./build` in `pwshbuild.conf` should suffice for most use cases.
-	The second script, `build.ps1` works in tandem with `config_cmake.ps1`. Since it does not make sense to
-	build a project without first running the CMake configuration, `build.ps1` will first run `config_cmake.ps1`
-	should the build directory not exist. Once complete, it will then build the project.
+3. Build the project.
 
-	Additionally, you will find `clean.ps1` useful for deleting the build directory. I do not map this script
-	to any keys and I only use this script if I change the CMake build configuration for a particular project
-	or if I need to reconfigure the project anew.
+	``` cmake --build ./build ```
 
-	The last two scripts are related to debugging. You will find `debug.ps1` to be useful if you use Visual
-	Studio for debugging your applications. This will invoke `devenv` on the executable path set in
-	`pwshbuild.conf`. Depending on how the CMakeLists is set up, the executable path may be different. For
-	example, my typical path looks something like this: `exepathDebug=./build/bin/Debug/pwshbuild.exe`. In
-	order for `devenv` to be invoked by the command line, you will need to execute `vsvars64.bat` on terminal
-	startup. You can find [more information here](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles?view=powershell-7.2) if this something you're interested in.
-	You can create a profile script that is ran when PowerShell starts so that you have access to `devenv`.
-	The other script, `run.ps1`, runs the program using the `exepathDebug` entry in `pwshbuild.conf` as
-	described earlier.
+4. Copy the executable from the build binary directory. The relative directory is shown:
 
-* <h3> Can <strong>pwshbuild</strong> do more? </h3>
+	``` ./build/bin/Debug/pwshbuild.exe ```
 
-	You can, of course, modify the scripts as you like. I find that this is something I do with every project
-	as it matures. You will find the code for loading `pwshbuild.conf` at the top of every script. All it does
-	is parse out the contents of the file and maps it into a variable `$h`. You can add additional entries into
-	`pwshbuild.conf` without consequence.
+5. Paste the executable somewhere that you can add it to your environment variable PATHs. An example is shown:
 
-	The idea behind `pwshbuild.conf` is to avoid having to modify each script individually if you make one change
-	that affects more than one file.
+	``` C:\Program Files (Custom)\binaries\pwshbuild.exe ```
 
-* <h3> Extensibility of the <strong>pwshbuild</strong> source code: </h3>
+6. Add pwshbuild to your environment variables PATHs.
 
-	The source code is some of the most trivial code I have ever written, yet it is something that I am quite proud of.
-	The nice part is that it is geniuinly quite easy to understand. If you want to modify the scripts that it generates,
-	they are all right there, in the source code. Nothing weird or strange going on.
+You are now ready to use pwshbuild! Enter the root of your project directory, execute `pwshbuild`, and it should
+drop all the scripts with the configuration file right there for you! All that's left is to edit `pwshbuild.conf`
+with the necessary information, and you are ready to go.
 
-# What are your VSCode keybindings?
+# Pwshbuild Documentation
+
+### Commandline Flags
+
+Pwshbuild comes with a variety of CLI parameter flags that you can use:
+
+<table width="100%">
+	<tr>
+		<th width="20%">Command Parameter</th>
+		<th>Description</th>
+	</tr>
+	<tr>
+		<td>--help</td>
+		<td>Displays the help dialogue.</td>
+	</tr>
+	<tr>
+		<td>--set-buildpath</td>
+		<td>
+			Sets the builddir in pwshbuild.conf for you using the following argument that proceeds the parameter.</br>
+			Example: <code>pwshbuild --set-buildpath ./build</code>
+		</td>
+	</tr>
+	<tr>
+		<td>--set-debugpath</td>
+		<td>
+			Sets the exepathDebug in pwshbuild.conf for you using the following argument that proceeds the parameter.</br>
+			Example: <code>pwshbuild --set-debugpath ./build/bin/Debug/pwshbuild.exe</code>
+		</td>
+	</tr>
+	<tr>
+		<td>--overwrite-config</td>
+		<td>
+			By default, if there is an existing <code>pwshbuild.conf</code> within the calling directory, pwshbuild will
+			not overwrite it. This flag will force pwshbuild to overwrite the config file when passed in.
+		</td>
+	</tr>
+</table>
+
+### Modifying the Scripts
+
+The scripts that are generated are defined within the source. You can modify the source and recompile the source to change
+the default scripts that pwshbuild generates. Additionally, the scripts themselves are quite easy to modify once they are
+generated. The config file is modifiable without consequence, simply add entries and headers as you like and each script
+will have access to them. At the head of each script is the PowerShell code which parses out the file. The value of each
+entry within a properly defined config file is stored with the PowerShell variable `$h`. For the most part, the base
+behavior of these scripts simple reuse the common build directory and debug executable path, but you can add whatever you
+want to extend the behavior of these scripts.
+
+# VSCode Keyboard Shortcuts
 
 Below are the keybindings I use to execute the scripts while using Visual Studio Code. You can change the
-keys and behaviors as you see fit to best match what you're comfortable with.
+keys and behaviors as you see fit to best match what you're comfortable with. To access the JSON file for
+VS Code's keybindings:
+
+``` File > Preferences > Keyboard Shortcuts ```
+
+Switch to the JSON editor using the top right icon within the interface and paste in the following commands:
 
 ```JSON
 {
