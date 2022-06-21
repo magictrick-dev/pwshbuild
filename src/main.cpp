@@ -330,6 +330,9 @@ checkArguments(std::vector<argument>& argument_list, int argc, char** argv)
 
 }
 
+/**
+ * Initializes the application state using the arguments provided by the user.
+ */
 static void
 initializeApplicationState(std::vector<argument> arguments, astate& applicationState)
 {
