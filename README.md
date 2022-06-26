@@ -56,6 +56,13 @@ Pwshbuild comes with a variety of CLI parameter flags that you can use:
 		<td>Displays the help dialogue.</td>
 	</tr>
 	<tr>
+		<td>--create-project</td>
+		<td>
+			Creates a project using the supplied name. Generates a CMAKELISTS and a simple main.cpp file.
+			Example: <code>pwshbuild --create-project pwshbuild</code>
+		</td>
+	</tr>
+	<tr>
 		<td>--set-buildpath</td>
 		<td>
 			Sets the builddir in pwshbuild.conf for you using the following argument that proceeds the parameter.</br>

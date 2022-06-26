@@ -25,12 +25,22 @@ typedef int64_t b64;
 
 static inline std::string platformGetApplicationPath();
 static inline b32 platformFileExists(std::string);
+static inline b32 platformCreateDirectory(std::string);
 
 /**
  * Windows specific definitions.
  */
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32)
 #include <windows.h>
+
+/**
+ * Creates a directory using the given path.
+ */
+static inline b32 platformCreateDirectory(std::string path)
+{
+	BOOL _create_status = CreateDirectoryA(path.c_str(), NULL);
+	return _create_status;
+}
 
 /**
  * Returns the executable path of the application.
@@ -124,6 +134,29 @@ const char* debugscript =
 const char* runscript =
 	"Invoke-Expression $h.exepathDebug";
 
+/**
+ * The cmakelists.txt file that is generated when invoking --create-project. It will set the
+ * executable name within that cmake lists file.
+ */
+const char* cmakelists =
+	"\n"
+	"cmake_minimum_required(VERSION 3.10)\n"
+	"\n"
+	"set(CMAKE_CXX_STANDARD 17)\n"
+	"set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)\n";
+
+/**
+ * A simple hello world file.
+ */
+const char* mainsource =
+	"/**\n"
+	" * A simple hello world file.\n"
+	" */\n"
+	"#include <iostream>\n\n"
+	"int main(int argc, char** argv)\n"
+	"{\n"
+	"\tstd::cout << \"Hello world\" << std::endl;\n"
+	"}\n\n\n";
 
 // ---------------------------------------------------------------------------------------------------
 // Utility Functions & Classes
@@ -137,6 +170,8 @@ typedef struct astate
 
 	std::string buildpath; 		// pwshbuild config parameter
 	std::string debugpath; 		// pwshbuild config parameter
+
+	std::string projectname;	// Sets the project name and a default executable name.
 
 	b32 overwrite_config; 		// Determines if we overwrite an existing pwshbuild.conf file.
 	b32 help_dialogue; 			// Determines if the app should display the help instead of running.
@@ -225,6 +260,7 @@ validateArgument(int& carg, const int argc, char** argv)
 		{"--overwrite-config", argflagtype::single},
 		{"--set-buildpath", argflagtype::pair},
 		{"--set-debugpath", argflagtype::pair},
+		{"--create-project", argflagtype::pair}
 	};
 
 	// If the key doesn't exist, it is an invalid key.
@@ -361,6 +397,11 @@ initializeApplicationState(std::vector<argument> arguments, astate& applicationS
 			applicationState.overwrite_config = true;
 		}
 
+		else if (carg.head == "--create-project")
+		{
+			applicationState.projectname = carg.tail;
+		}
+
 	}
 
 }
@@ -417,11 +458,41 @@ main(int argc, char** argv)
 		printHelpEntry("", "Example: pwhsbuild --set-debugpath ./build/bin/Debug/pwshbuild.exe");
 		std::cout << std::endl;
 
+		printHelpEntry("--create-project", "Creates a project and a simple executable. Creates CMAKELISTS and main.cpp.");
+		printHelpEntry("", "Example: pwhsbuild --create-project pwshbuild");
+		std::cout << std::endl;
+
 		return 0; // Exit application.
 	}
 
 	// Create a string stream to store the contents of a file.
 	std::stringstream fstring;
+
+	{
+		if (!platformFileExists("./CMAKELISTS.txt") && _app_state.projectname != "")
+		{
+			{
+				DOutput dout("Generating a CMake project");
+				fstring << cmakelists;
+				fstring << "project(" << _app_state.projectname << ")\n";
+				fstring << "add_executable(" << _app_state.projectname << " ./src/main.cpp)\n";
+				fstring << "set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT";
+				fstring << " " << _app_state.projectname << ")\n";
+				genf("./CMAKELISTS.txt", fstring.str());
+				clearss(fstring);
+			}
+		}
+		if (!platformFileExists("./src/main.cpp") && _app_state.projectname != "")
+		{
+			{
+				DOutput dout("Generating a main source file");
+				platformCreateDirectory("./src");
+				fstring << mainsource;
+				genf("./src/main.cpp", fstring.str());
+				clearss(fstring);
+			}
+		}
+	}
 
 	{
 
