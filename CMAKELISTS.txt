@@ -6,4 +6,18 @@ project(pwshbuild)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-add_executable(pwshbuild ./src/main.cpp)
+add_compile_definitions(DEBUG)
+
+add_executable(pwshbuild
+	./src/pwshbuild/main.cpp
+
+	./src/pwshbuild/cli/generator.h
+	./src/pwshbuild/cli/cliparser.h
+	./src/pwshbuild/cli/generator.cpp
+	./src/pwshbuild/cli/cliparser.cpp
+
+	./src/pwshbuild/utils/primitives.h
+)
+
+
+target_include_directories(pwshbuild PUBLIC ./src)

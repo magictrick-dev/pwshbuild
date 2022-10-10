@@ -1,0 +1,31 @@
+#!@./testproj/src
+#!@./testproj/src/testproj
+#!@./testproj/src/vendor
+#!@./testproj/src/utils
+
+#!cmakelists.txt@./testproj
+cmake_minimum_required(VERSION 3.10)
+
+project(testproj)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+add_compile_definitions(DEBUG)
+
+add_executable(testproj
+	./src/testproj/main.cpp
+)
+
+target_include_directories(testproj PUBLIC ./src)
+#!
+
+#!main.cpp@./testproj/src/testproj
+#include <iostream>
+
+int main()
+{
+	std::cout << "Hello world.\n";
+	return 0;
+}
+#!
